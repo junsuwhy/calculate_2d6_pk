@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="zh-tw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="jquery.js"></script>
+  <title></title>
+  <style>
+    .container {
+      max-width: 680px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+
+    }
+    .player {
+      width: 50%
+    }
+    .result-console {
+      width: 100%;
+    }
+    table {
+      text-align: right;
+    }
+    .console {
+      border: 1px solid #ccc;
+      min-height: 60px;
+    }
+
+  </style>
+  <script>
+    (function($){
+      $(function(){
+        var pks = function() {
+          var A = parseInt(document.getElementById("A").value);
+          var B = parseInt(document.getElementById("B").value);
+          var C = parseInt(document.getElementById("C").value);
+          var D = parseInt(document.getElementById("D").value);
+          var times = document.getElementById("times").value;
+          var allPKs = [];
+          console.log(A,B,C,D);
+          console.log(pk(A,B,C,D));
+          var XWinTimes=0;
+          var YWinTimes=0;
+          var Y_X = [];
+          for (let i = 0; i < times; i++) {
+            var result = pk(A,B,C,D);
+            if (result[0] > result[1]) {
+              XWinTimes++;
+            }
+            if (result[1] > result[0]) {
+              YWinTimes++;
+            }
+            Y_X.push(result[1]-result[0]);
+
+            allPKs.push(result);
+          }
+          console.log(XWinTimes);
+          console.log(YWinTimes);
+          var XwinText = XWinTimes + "/" + times + "(" + (Math.round((XWinTimes/times)*10000))/100 + "%)";
+          $('#player1-probability').text(XwinText);
+          var YwinText = YWinTimes + "/" + times + "(" + (Math.round((YWinTimes/times)*10000))/100 + "%)";
+          $('#player2-probability').text(YwinText);
+          var Y_X_means = Y_X.reduce((a, b) => a+b) / times;
+          $('#Y-X-means').text(Y_X_means);
+          var Y_X_sort = Y_X.sort();
+          $('#Y-X-mid').text(Y_X_sort[times/2]);
+
+          console.log(allPKs);
+          console.log(Y_X_sort);
+          
+          var showTable = false;
+          if (document.getElementById('show-result').checked ) {
+            if (times >= 10000 && window.confirm("您有勾選「顯示結果」，目前測試次數大於 10000 ，可能會跑很久，確定要顯示結果嗎？")) {
+              showTable = true;
+            }
+            else if (times < 10000) {
+              showTable = true;
+            }
+          }
+          if (showTable) {
+            var text = "<table border='1'><thead><th>第n次</th><th>玩家1</th><th>玩家2</th><th>Y-X</th></thead><tbody>";
+            for (let i = 0; i < allPKs.length; i++) {
+              var X = allPKs[i][0];
+              var Y = allPKs[i][1];
+              var XYReduce = Y-X;
+              text += "<tr><td>{i}</td><td>{X}</td><td>{Y}</td><td>{Y-X}</td></tr>".replace("{i}", i).replace("{X}", X).replace("{Y}",Y).replace("{Y-X}", XYReduce);
+            }
+            text += "</tbody></table>";
+            $('.console').html(text);
+          }
+          else {
+            $('.console').html("");
+          }
+
+        }
+
+        var d6 = function() {
+          return Math.floor(Math.random()*6 + 1);
+        }
+
+        var pk = function(A, B, C, D) {
+          var d1, d2, d3, d4;
+          d1 = d6();
+          d2 = d6();
+          d3 = d6();
+          d4 = d6();
+          return [A+d1+d2+B, C+d3+d4+D];
+        }
+        $('#submit').click(pks);
+      });
+    }(jQuery));
+  </script>
+</head>
+<body>
+  <div class="container">
+    <div class="player" id="player-1">
+      <div class="name">玩家1</div>
+      <div class="dice-display"></div>
+      <div class="controller">
+        <label for="A">A:</label><input type="number" class="number-1" id="A" value="1">
+        <div class="number-dice"></div>
+        <label for="B">B:</label><input type="number" class="number-2" id="B" value="2">
+        <div class="number-result"></div>
+      </div>
+    </div>
+    <div class="player" id="player-2">
+      <div class="name">玩家2</div>
+      <div class="dice-display"></div>
+      <div class="controller">
+        <label for="C">C:</label><input type="number" class="number-1" id="C" value="3">
+        <div class="number-dice"></div>
+        <label for="D">D:</label><input type="number" class="number-2" id="D" value="4">
+        <div class="number-result"></div>
+      </div>
+    </div>
+    <div class="result-console">
+      <select name="times" id="times">
+        <option value="100">100次</option>
+        <option value="1000">1000次</option>
+        <option value="10000">10000次</option>
+        <option value="100000">100000次</option>
+      </select>
+      <button id="submit">計算</button>
+      <input type="checkbox" id="show-result"><label for="show-result">顯示結果（若次數太多會花上一些時間）</label>
+      <div class="result">
+        <div class="reulst-text-line">
+          Player1 勝率：<span id="player1-probability"></span>
+        </div>
+        <div class="reulst-text-line">
+          Player2 勝率：<span id="player2-probability"></span>
+        </div>
+        <div class="reulst-text-line">
+          Y-X 平均：<span id="Y-X-means"></span>
+        </div>
+        <div class="reulst-text-line">
+          Y-X 中位數：<span id="Y-X-mid"></span>
+        </div>
+      </div>
+      <div class="console-name">驗證區</div>
+      <div class="console"></div>
+    </div>
+  </div>
+</body>
+</html>
